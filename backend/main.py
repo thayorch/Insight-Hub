@@ -1,0 +1,182 @@
+import os
+import json
+import requests
+from datetime import datetime, timedelta, timezone
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import google.generativeai as genai
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+load_dotenv()
+
+app = FastAPI(title="Issue Tracking API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class IssueReport(BaseModel): 
+    issue: str 
+    details: str 
+    location: str
+
+# Set up Gemini API
+genai.configure(api_key=os.getenv("GEMINI_API_KEY", "YOUR_API_KEY"))
+
+# Set up Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+supabase: Client | None = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+
+# Set up LINE Notify
+LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN", "")
+
+def send_line_notify(message: str):
+    if not LINE_NOTIFY_TOKEN:
+        print("LINE Notify token not set. Message:", message)
+        return
+    url = 'https://notify-api.line.me/api/notify'
+    headers = {'Authorization': f'Bearer {LINE_NOTIFY_TOKEN}'}
+    data = {'message': message}
+    try:
+        requests.post(url, headers=headers, data=data)
+    except Exception as e:
+        print("Failed to send LINE notification:", e)
+
+import typing_extensions as typing
+
+class AnalysisResult(typing.TypedDict):
+    category: str
+    base_risk_level: int
+    reason: str
+
+SYSTEM_PROMPT = """You are the AI that helps analyze data and report incidents and complaints to the area management system. Your job is to evaluate 'issues' and 'details' provided by users.
+
+The analysis rules are as follows:
+
+1. Category: Select only 1 most appropriate category from the following list:
+- "Safety & Persons" (e.g. strangers, quarrels, lost items, suspicious persons) 
+- "Structure & Traffic" (e.g. damaged roads, blocked cars, cracked buildings, water leaks) 
+- "Common areas" (e.g. dirty bathrooms, broken fitness equipment, not cool air conditioning) 
+- "Environment" (e.g. overflowing garbage, bad smells, loud noises, off-road lights)
+
+2. Initial level of severity (base_risk_level): Select only 1 level from the following list:
+- 3: (Emergency Threat) An event that directly affects a person's safety. At risk of life, property, or immediate need for assistance (e.g., someone carrying a weapon, car accident, fire) 
+- 1: (General problems or compliments) General suggestions. Structural problems that do not cause immediate serious harm or compliment 
+*Note: Level 2 is calculated from frequencies in the database. You only output 1 or 3.
+
+3. Reason: Provide a brief explanation for your evaluation.
+"""
+
+model = genai.GenerativeModel( 
+    'gemini-3.5-flash', 
+    system_instruction=SYSTEM_PROMPT
+)
+
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "Issue Tracking API"}
+
+import traceback
+
+@app.post("/api/analyze-issue")
+async def analyze_issue(report: IssueReport): 
+    prompt = f"Issue: {report.issue}\nDetails: {report.details}" 
+    
+    try: 
+        response = model.generate_content( 
+            prompt, 
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": AnalysisResult
+            } 
+        ) 
+        result = json.loads(response.text) 
+        
+        final_level = result.get('base_risk_level', 1)
+        category = result.get('category', 'Unknown')
+        
+        if supabase:
+            # Upgrade Logic: If Level 1, check if > 2 instances in past 24h for same category nearby
+            if final_level == 1:
+                yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+                
+                # Fetch recent issues of the same category
+                res = supabase.table('issues').select('location') \
+                    .eq('category', category) \
+                    .gte('created_at', yesterday) \
+                    .execute()
+                    
+                recent_issues = res.data if res.data else []
+                nearby_count = 0
+                
+                # Try to parse the incoming report location
+                report_coords = None
+                if report.location and ',' in report.location:
+                    try:
+                        parts = report.location.split(',')
+                        report_coords = (float(parts[0]), float(parts[1]))
+                    except ValueError:
+                        pass
+                
+                for past_issue in recent_issues:
+                    loc = past_issue.get('location', '')
+                    if loc == report.location:
+                        nearby_count += 1
+                    elif report_coords and ',' in loc:
+                        try:
+                            past_parts = loc.split(',')
+                            past_coords = (float(past_parts[0]), float(past_parts[1]))
+                            # Approximate distance check (0.001 deg is ~111 meters)
+                            if abs(report_coords[0] - past_coords[0]) < 0.001 and abs(report_coords[1] - past_coords[1]) < 0.001:
+                                nearby_count += 1
+                        except ValueError:
+                            pass
+                
+                if nearby_count >= 2:
+                    final_level = 2
+            
+            # Save the record
+            record = {
+                'issue': report.issue,
+                'details': report.details,
+                'location': report.location,
+                'category': category,
+                'risk_level': final_level,
+                'reason': result.get('reason', '')
+            }
+            supabase.table('issues').insert(record).execute()
+        
+        result['final_risk_level'] = final_level
+        
+        # Handle Notifications
+        if final_level == 3:
+            msg = f"\n🚨 EMERGENCY [Level 3]\n📍 Location: {report.location}\n⚠️ Issue: {report.issue}\n📂 Category: {category}\n📝 Details: {report.details}"
+            send_line_notify(msg)
+        elif final_level == 2:
+            msg = f"\n⚠️ RECURRING PROBLEM [Level 2]\n📍 Location: {report.location}\n⚠️ Issue: {report.issue}\n📂 Category: {category}\n📝 Details: {report.details}"
+            send_line_notify(msg)
+
+        return result 
+    except Exception as e: 
+        tb = traceback.format_exc()
+        print("ERROR:", tb)
+        raise HTTPException(status_code=500, detail=str(e) + " | Traceback: " + tb)
+
+@app.get("/api/issues")
+def get_issues():
+    if not supabase:
+        return {"data": []}
+    
+    try:
+        # Fetch the latest 100 issues
+        res = supabase.table('issues').select('*').order('created_at', desc=True).limit(100).execute()
+        return {"data": res.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

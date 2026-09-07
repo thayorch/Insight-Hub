@@ -1,0 +1,15 @@
+# Node
+**/node_modules/
+**/dist/
+**/.nuxt/
+**/.output/
+
+# Python
+**/venv/
+**/env/
+**/__pycache__/
+**/*.pyc
+**/.env
+
+# MacOS
+**/.DS_Store
