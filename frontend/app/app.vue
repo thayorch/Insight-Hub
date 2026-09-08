@@ -4,14 +4,14 @@
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
-          <div class="flex items-center gap-8">
-            <NuxtLink to="/" class="flex items-center gap-2 text-indigo-700 font-bold text-xl tracking-tight">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-              ระบบจัดการพื้นที่
+          <div class="flex items-center gap-4 lg:gap-8 flex-1 min-w-0">
+            <NuxtLink to="/" class="flex items-center gap-2 text-indigo-700 font-bold text-lg lg:text-xl tracking-tight min-w-0">
+              <svg class="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+              <span class="truncate block">Insight Hub</span>
             </NuxtLink>
-            <nav class="hidden md:flex space-x-1">
-              <NuxtLink to="/" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แจ้งปัญหา</NuxtLink>
-              <NuxtLink to="/dashboard" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แดชบอร์ดสรุปผล</NuxtLink>
+            <nav class="hidden md:flex space-x-1 flex-shrink-0">
+              <NuxtLink to="/" class="px-3 lg:px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แจ้งปัญหา</NuxtLink>
+              <NuxtLink to="/dashboard" class="px-3 lg:px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แดชบอร์ดสรุปผล</NuxtLink>
             </nav>
           </div>
           <!-- <div class="flex items-center gap-4">
@@ -41,7 +41,7 @@
     
     <footer class="hidden md:block bg-white border-t border-slate-200 mt-auto">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-500">
-        &copy; 2026 ระบบการจัดการพื้นที่อัจฉริยะ (AI Area Management)
+        &copy; 2026 Insight Hub. All rights reserved for <a href="https://github.com/thayorch" target="_blank" class="hover:text-indigo-800 hover:underline transition">thayorch</a>
       </div>
     </footer>
   </div>
