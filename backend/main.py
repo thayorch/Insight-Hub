@@ -38,13 +38,13 @@ supabase: Client | None = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_
 
 # Set up LINE Messaging API
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "")
-LINE_TARGET_ID = os.getenv("LINE_TARGET_ID", "")
 
 def send_line_message(title: str, level: int, location: str, issue: str, category: str, details: str):
-    if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_TARGET_ID:
+    if not LINE_CHANNEL_ACCESS_TOKEN:
         print("LINE Messaging API credentials not set. Message:", title)
         return
-    url = 'https://api.line.me/v2/bot/message/push'
+        
+    url = 'https://api.line.me/v2/bot/message/broadcast'
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN}'
@@ -53,7 +53,6 @@ def send_line_message(title: str, level: int, location: str, issue: str, categor
     color = "#ef4444" if level == 3 else "#eab308"
     
     flex_message = {
-        "to": LINE_TARGET_ID,
         "messages": [
             {
                 "type": "flex",
