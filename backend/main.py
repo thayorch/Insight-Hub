@@ -4,6 +4,8 @@ import requests
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Optional
+from typing_extensions import TypedDict
 import google.generativeai as genai
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -116,31 +118,36 @@ async def analyze_issue(report: IssueReport):
                 recent_issues = res.data if res.data else []
                 nearby_count = 0
                 
-                # Try to parse the incoming report location
-                report_coords = None
-                if report.location and ',' in report.location:
+                # Helper to extract coords
+                def extract_coords(loc_str):
+                    if not loc_str: return None
                     try:
-                        parts = report.location.split(',')
-                        report_coords = (float(parts[0]), float(parts[1]))
+                        if '|' in loc_str:
+                            loc_str = loc_str.split('|')[-1]
+                        parts = loc_str.split(',')
+                        if len(parts) >= 2:
+                            return (float(parts[0].strip()), float(parts[1].strip()))
                     except ValueError:
                         pass
+                    return None
+                    
+                report_coords = extract_coords(report.location)
                 
                 for past_issue in recent_issues:
                     loc = past_issue.get('location', '')
                     if loc == report.location:
                         nearby_count += 1
-                    elif report_coords and ',' in loc:
-                        try:
-                            past_parts = loc.split(',')
-                            past_coords = (float(past_parts[0]), float(past_parts[1]))
+                    else:
+                        past_coords = extract_coords(loc)
+                        if report_coords and past_coords:
                             # Approximate distance check (0.001 deg is ~111 meters)
                             if abs(report_coords[0] - past_coords[0]) < 0.001 and abs(report_coords[1] - past_coords[1]) < 0.001:
                                 nearby_count += 1
-                        except ValueError:
-                            pass
                 
                 if nearby_count >= 2:
                     final_level = 2
+                    result['reason'] += f" [Automated Upgrade: This is a recurring issue. Found {nearby_count} similar incidents nearby in the past 24 hours.]"
+                    result['base_risk_level'] = 2
             
             # Save the record
             record = {
@@ -170,13 +177,48 @@ async def analyze_issue(report: IssueReport):
         raise HTTPException(status_code=500, detail=str(e) + " | Traceback: " + tb)
 
 @app.get("/api/issues")
-def get_issues():
-    if not supabase:
-        return {"data": []}
-    
+async def get_issues():
     try:
-        # Fetch the latest 100 issues
-        res = supabase.table('issues').select('*').order('created_at', desc=True).limit(100).execute()
-        return {"data": res.data}
+        if supabase:
+            res = supabase.table('issues').select('*').order('created_at', desc=True).execute()
+            return {"status": "success", "data": res.data}
+        else:
+            return {"status": "error", "message": "Supabase not configured"}
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+class IssueUpdate(BaseModel):
+    issue: Optional[str] = None
+    details: Optional[str] = None
+    location: Optional[str] = None
+    category: Optional[str] = None
+    risk_level: Optional[int] = None
+
+@app.patch("/api/issues/{issue_id}")
+async def update_issue(issue_id: str, update: IssueUpdate):
+    try:
+        if supabase:
+            update_data = {k: v for k, v in update.model_dump().items() if v is not None}
+            res = supabase.table('issues').update(update_data).eq('id', issue_id).execute()
+            return {"status": "success", "data": res.data}
+        else:
+            return {"status": "error", "message": "Supabase not configured"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/issues/{issue_id}")
+async def delete_issue(issue_id: str):
+    try:
+        if supabase:
+            res = supabase.table('issues').delete().eq('id', issue_id).execute()
+            return {"status": "success", "message": "Deleted"}
+        else:
+            return {"status": "error", "message": "Supabase not configured"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
