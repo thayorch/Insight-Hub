@@ -161,9 +161,17 @@ async function initMap() {
         maxZoom: 20
       }).addTo(pickerMap)
       
+      const getPickerIcon = () => L.divIcon({
+        className: 'bg-transparent border-0',
+        html: `<div style="color: #4f46e5; filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.15));"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      })
+
       pickerMap.on('click', async (e) => {
         if (pickerMarker) pickerMap.removeLayer(pickerMarker)
-        pickerMarker = L.marker(e.latlng).addTo(pickerMap)
+        pickerMarker = L.marker(e.latlng, { icon: getPickerIcon() }).addTo(pickerMap)
         form.value.mapCoords = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`
         
         // Free Reverse Geocoding via OpenStreetMap Nominatim
@@ -196,8 +204,15 @@ async function searchLocation() {
         pickerMap.setView([lat, lon], 16)
         
         const L = await import('leaflet')
+        const getPickerIcon = () => L.divIcon({
+          className: 'bg-transparent border-0',
+          html: `<div style="color: #4f46e5; filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.15));"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32]
+        })
         if (pickerMarker) pickerMap.removeLayer(pickerMarker)
-        pickerMarker = L.marker([lat, lon]).addTo(pickerMap)
+        pickerMarker = L.marker([lat, lon], { icon: getPickerIcon() }).addTo(pickerMap)
         form.value.mapCoords = `${lat.toFixed(5)}, ${lon.toFixed(5)}`
         form.value.locationName = data[0].display_name || ''
       }

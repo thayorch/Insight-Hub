@@ -378,13 +378,21 @@ async function initEditMap(initialCoords) {
       maxZoom: 20
     }).addTo(editMapInstance)
     
+    const getEditIcon = () => L.divIcon({
+      className: 'bg-transparent border-0',
+      html: `<div style="color: #4f46e5; filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.15));"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    })
+    
     if (initialCoords) {
-      editMarker = L.marker(initialCoords).addTo(editMapInstance)
+      editMarker = L.marker(initialCoords, { icon: getEditIcon() }).addTo(editMapInstance)
     }
     
     editMapInstance.on('click', async (e) => {
       if (editMarker) editMapInstance.removeLayer(editMarker)
-      editMarker = L.marker(e.latlng).addTo(editMapInstance)
+      editMarker = L.marker(e.latlng, { icon: getEditIcon() }).addTo(editMapInstance)
       editForm.value.mapCoords = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`
       
       try {
@@ -414,8 +422,15 @@ async function searchEditLocation() {
       if (editMapInstance) {
         editMapInstance.setView([lat, lon], 16)
         const L = await import('leaflet')
+        const getEditIcon = () => L.divIcon({
+          className: 'bg-transparent border-0',
+          html: `<div style="color: #4f46e5; filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.15));"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32]
+        })
         if (editMarker) editMapInstance.removeLayer(editMarker)
-        editMarker = L.marker([lat, lon]).addTo(editMapInstance)
+        editMarker = L.marker([lat, lon], { icon: getEditIcon() }).addTo(editMapInstance)
         editForm.value.mapCoords = `${lat.toFixed(5)}, ${lon.toFixed(5)}`
         editForm.value.locationName = data[0].display_name || ''
       }
@@ -546,13 +561,15 @@ async function initMap() {
         if (issue.risk_level === 3) color = '#ef4444' // red-500
         if (issue.risk_level === 2) color = '#eab308' // yellow-500
         
-        const marker = L.circleMarker(coords, {
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.8,
-          radius: 8,
-          weight: 2
-        }).addTo(markerLayerGroup)
+        const customIcon = L.divIcon({
+          className: 'bg-transparent border-0',
+          html: `<div style="color: ${color}; filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.15));"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px;"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32]
+        })
+
+        const marker = L.marker(coords, { icon: customIcon }).addTo(markerLayerGroup)
         .bindPopup(`
           <div style="font-family: sans-serif;">
             <strong style="display:block;margin-bottom:4px;color:#0f172a">${issue.issue}</strong>
