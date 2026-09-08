@@ -36,20 +36,92 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 supabase: Client | None = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
-# Set up LINE Notify
-LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN", "")
+# Set up LINE Messaging API
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "")
+LINE_TARGET_ID = os.getenv("LINE_TARGET_ID", "")
 
-def send_line_notify(message: str):
-    if not LINE_NOTIFY_TOKEN:
-        print("LINE Notify token not set. Message:", message)
+def send_line_message(title: str, level: int, location: str, issue: str, category: str, details: str):
+    if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_TARGET_ID:
+        print("LINE Messaging API credentials not set. Message:", title)
         return
-    url = 'https://notify-api.line.me/api/notify'
-    headers = {'Authorization': f'Bearer {LINE_NOTIFY_TOKEN}'}
-    data = {'message': message}
+    url = 'https://api.line.me/v2/bot/message/push'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN}'
+    }
+    
+    color = "#ef4444" if level == 3 else "#eab308"
+    
+    flex_message = {
+        "to": LINE_TARGET_ID,
+        "messages": [
+            {
+                "type": "flex",
+                "altText": f"แจ้งเตือนปัญหา Level {level}: {issue}",
+                "contents": {
+                    "type": "bubble",
+                    "header": {
+                        "type": "box",
+                        "layout": "vertical",
+                        "backgroundColor": color,
+                        "contents": [
+                            {
+                                "type": "text",
+                                "text": title,
+                                "weight": "bold",
+                                "color": "#ffffff",
+                                "size": "lg"
+                            }
+                        ]
+                    },
+                    "body": {
+                        "type": "box",
+                        "layout": "vertical",
+                        "spacing": "md",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {"type": "text", "text": "ประเด็นปัญหา", "color": "#8c8c8c", "size": "sm"},
+                                    {"type": "text", "text": issue, "wrap": True, "weight": "bold"}
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {"type": "text", "text": "สถานที่", "color": "#8c8c8c", "size": "sm"},
+                                    {"type": "text", "text": location, "wrap": True}
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {"type": "text", "text": "หมวดหมู่", "color": "#8c8c8c", "size": "sm"},
+                                    {"type": "text", "text": category, "wrap": True}
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {"type": "text", "text": "รายละเอียด", "color": "#8c8c8c", "size": "sm"},
+                                    {"type": "text", "text": details, "wrap": True}
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+    
     try:
-        requests.post(url, headers=headers, data=data)
+        requests.post(url, headers=headers, json=flex_message)
     except Exception as e:
-        print("Failed to send LINE notification:", e)
+        print("Failed to send LINE message:", e)
 
 import typing_extensions as typing
 
@@ -164,11 +236,23 @@ async def analyze_issue(report: IssueReport):
         
         # Handle Notifications
         if final_level == 3:
-            msg = f"\n🚨 EMERGENCY [Level 3]\n📍 Location: {report.location}\n⚠️ Issue: {report.issue}\n📂 Category: {category}\n📝 Details: {report.details}"
-            send_line_notify(msg)
+            send_line_message(
+                title="🚨 EMERGENCY [Level 3]",
+                level=3,
+                location=report.location,
+                issue=report.issue,
+                category=category,
+                details=report.details
+            )
         elif final_level == 2:
-            msg = f"\n⚠️ RECURRING PROBLEM [Level 2]\n📍 Location: {report.location}\n⚠️ Issue: {report.issue}\n📂 Category: {category}\n📝 Details: {report.details}"
-            send_line_notify(msg)
+            send_line_message(
+                title="⚠️ RECURRING PROBLEM [Level 2]",
+                level=2,
+                location=report.location,
+                issue=report.issue,
+                category=category,
+                details=report.details
+            )
 
         return result 
     except Exception as e: 
