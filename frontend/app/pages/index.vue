@@ -56,29 +56,6 @@
       </div>
     </div>
     
-    <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-8 flex flex-col sm:flex-row gap-3">
-      <div class="relative flex-1">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </div>
-        <input
-          type="text"
-          v-model="searchText"
-          placeholder="ค้นหาหัวข้อ / รายละเอียด / สถานที่..."
-          class="block w-full pl-10 rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border bg-white"
-        />
-      </div>
-      <select v-model="filterCategory" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border bg-white">
-        <option value="">ทุกหมวดหมู่</option>
-        <option v-for="c in CATEGORIES" :key="c" :value="c">{{ c }}</option>
-      </select>
-      <select v-model="filterStatus" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border bg-white">
-        <option value="">ทุกสถานะ</option>
-        <option v-for="s in STATUS_FLOW" :key="s" :value="s">{{ statusLabel(s) }}</option>
-      </select>
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
       <div class="lg:col-span-1 flex flex-col gap-8">
         <!-- Severity Pie Chart Card -->
@@ -117,8 +94,20 @@
 
       <!-- Map Card -->
       <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 class="text-base font-semibold text-slate-900">แผนที่จุดเกิดเหตุ</h2>
+          <div class="flex flex-wrap gap-2">
+            <select v-model="filterCategory" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2 border bg-white">
+              <option value="">ทุกหมวดหมู่</option>
+              <option v-for="c in CATEGORIES" :key="c" :value="c">{{ c }}</option>
+            </select>
+            <select v-model="filterStatus" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2 border bg-white">
+              <option value="">ทุกสถานะ</option>
+              <option v-for="s in STATUS_FLOW" :key="s" :value="s">{{ statusLabel(s) }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end mb-3">
           <div class="flex rounded-md border border-slate-300 overflow-hidden text-xs font-medium">
             <button type="button" @click="setMapView('marker')" :class="mapView === 'marker' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-3 py-1.5 transition">หมุด</button>
             <button type="button" @click="setMapView('heatmap')" :class="mapView === 'heatmap' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-3 py-1.5 transition border-l border-slate-300">ความหนาแน่น</button>
@@ -131,7 +120,22 @@
         </div>
       </div>
     </div>
-    
+
+    <!-- Search -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-8">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <input
+          type="text"
+          v-model="searchText"
+          placeholder="ค้นหาหัวข้อ / รายละเอียด / สถานที่..."
+          class="block w-full pl-10 rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border bg-white"
+        />
+      </div>
+    </div>
+
     <!-- Recent Issues Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="px-6 py-5 border-b border-slate-200">
