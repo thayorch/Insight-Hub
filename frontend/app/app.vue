@@ -10,8 +10,8 @@
               <span class="truncate block">Insight Hub</span>
             </NuxtLink>
             <nav class="hidden md:flex space-x-1 flex-shrink-0">
-              <NuxtLink to="/" class="px-3 lg:px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แจ้งปัญหา</NuxtLink>
-              <NuxtLink to="/dashboard" class="px-3 lg:px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แดชบอร์ดสรุปผล</NuxtLink>
+              <!-- <NuxtLink to="/" class="px-3 lg:px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">แดชบอร์ดสรุปผล</NuxtLink>
+              <NuxtLink to="/admin" class="px-3 lg:px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition" active-class="text-indigo-700 bg-indigo-50">บันทึกข้อมูล</NuxtLink> -->
             </nav>
           </div>
           <!-- <div class="flex items-center gap-4">
@@ -30,13 +30,13 @@
     <!-- Mobile Bottom Navigation -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50">
       <NuxtLink to="/" class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-indigo-600 transition" active-class="text-indigo-700 bg-indigo-50">
-        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-        <span class="text-[10px] font-medium">แจ้งปัญหา</span>
-      </NuxtLink>
-      <NuxtLink to="/dashboard" class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-indigo-600 transition border-l border-slate-100" active-class="text-indigo-700 bg-indigo-50">
         <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
         <span class="text-[10px] font-medium">แดชบอร์ด</span>
       </NuxtLink>
+      <!-- <NuxtLink to="/admin" class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-indigo-600 transition border-l border-slate-100" active-class="text-indigo-700 bg-indigo-50">
+        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        <span class="text-[10px] font-medium">บันทึกข้อมูล</span>
+      </NuxtLink> -->
     </nav>
     
     <footer class="hidden md:block bg-white border-t border-slate-200 mt-auto">

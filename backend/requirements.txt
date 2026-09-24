@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 pydantic
-google-generativeai
+groq
+requests
 supabase
 python-dotenv
