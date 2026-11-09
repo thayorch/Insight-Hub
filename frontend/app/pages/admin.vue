@@ -13,6 +13,18 @@
           <h2 class="text-lg font-medium text-slate-900 mb-4">1. ข้อมูลปัญหา</h2>
           <div class="space-y-5">
             <div>
+              <label for="topic" class="block text-sm font-medium text-slate-700 mb-1">ประเภทหัวข้อ</label>
+              <select
+                id="topic"
+                v-model="form.topic"
+                required
+                class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border bg-white"
+              >
+                <option value="" disabled>-- เลือกประเภทหัวข้อ --</option>
+                <option v-for="t in topics" :key="t" :value="t">{{ t }}</option>
+              </select>
+            </div>
+            <div>
               <label for="issue" class="block text-sm font-medium text-slate-700 mb-1">หัวข้อปัญหา (ประเด็น)</label>
               <input 
                 type="text" 
@@ -137,7 +149,18 @@ import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || 'http://localhost:8000'
 
+const topics = [
+  'คดีความ-นักศึกษา',
+  'การบริหารการจัดการ',
+  'การเมือง',
+  'วิชาการ/การวิจัย',
+  'คดีความ-บุคลากร',
+  'ทุจริต/ฉ้อโกง',
+  'อื่นๆ'
+]
+
 const form = ref({
+  topic: '',
   issue: '',
   details: '',
   mapCoords: '',
@@ -258,6 +281,7 @@ async function submitIssue() {
   
   try {
     const payload = {
+      topic: form.value.topic,
       issue: form.value.issue,
       details: form.value.details,
       location: finalLocation.value
@@ -286,6 +310,7 @@ async function submitIssue() {
       message: 'Incident successfully recorded and assessed.'
     }
     
+    form.value.topic = ''
     form.value.issue = ''
     form.value.details = ''
     form.value.mapCoords = ''

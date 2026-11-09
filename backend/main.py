@@ -21,8 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class IssueReport(BaseModel): 
-    issue: str 
+class IssueReport(BaseModel):
+    topic: Optional[str] = None
+    issue: str
     details: str 
     location: str
 
@@ -161,6 +162,15 @@ The analysis rules are as follows:
 - 1 (สีเขียว - Green): A general, everyday issue — including minor manners/fairness complaints between students (e.g. queue-cutting, littering, noise, rudeness) that do NOT involve a staff decision, discrimination, or a threat to safety. A single instance does not damage the university's image. Also covers general inconveniences, suggestions, compliments, and routine maintenance.
   Examples: "แอร์ในห้องสมุดไม่เย็น", "ถังขยะเต็มบริเวณโรงอาหาร", "อยากให้เพิ่มที่จอดจักรยาน", "ชมเชยพนักงานทำความสะอาด", "มีคนแซงคิวร้านกาแฟ"
 
+Topic-specific criteria: The user message includes a "Topic" chosen by the reporter. Apply the matching rule below on top of the general rules above. If the topic does not fit the content, judge by the content.
+- "คดีความ-นักศึกษา": 3 if a student is a victim or accused in a criminal matter (assault, sexual harassment, drugs, arrest), or the case may lead to a lawsuit or media coverage involving the university. 1 for minor disciplinary disputes or questions about procedures.
+- "คดีความ-บุคลากร": 3 if staff/faculty are accused of harassment, assault, abuse of power over students, a criminal offence, or a lawsuit is involved. 1 for routine internal workplace disputes or procedural questions.
+- "ทุจริต/ฉ้อโกง": 3 for any specific allegation of corruption, bribery, embezzlement, procurement fraud, or a scam that causes students financial loss. 1 only for vague suspicions with no concrete details, or general requests for transparency.
+- "การเมือง": 3 if there is violence or threats at a political activity, the university suppresses students' freedom of expression, or the issue is likely to go viral in the media. 1 for general opinions, routine campus elections, or ordinary debate.
+- "การบริหารการจัดการ": 3 if an administrative decision denies students a right or service they are entitled to, seriously affects many students at once (e.g. fee/registration errors blocking enrollment), or involves safety negligence. 1 for slow service, inefficient processes, or suggestions.
+- "วิชาการ/การวิจัย": 3 for unfair grading or blocking an exam/graduation without valid reason, academic misconduct by faculty (plagiarism, data fabrication), or research ethics violations that harm participants. 1 for course quality, scheduling, or teaching-style complaints.
+- "อื่นๆ" or missing: use the general rules above only.
+
 *Note: Level 2 (สีเหลือง - Yellow) means a problem that keeps recurring often — no single instance is an emergency, but the repeating pattern could damage the university's image if left unaddressed. Level 2 is calculated automatically from recurrence in the database, not by you. You must only output 1 or 3; never output 2 yourself.
 
 3. Reason: Provide a brief, specific explanation (in Thai) tying your decision back to the criteria above — which right, safety concern, or image impact applies, or why none does.
@@ -208,7 +218,7 @@ async def analyze_issue(report: IssueReport):
                 if is_nearby(row.get('location', ''), report.location):
                     candidates.append(row)
 
-        prompt = f"Issue: {report.issue}\nDetails: {report.details}"
+        prompt = f"Topic: {report.topic or '-'}\nIssue: {report.issue}\nDetails: {report.details}"
         if candidates:
             candidate_lines = "\n".join(
                 f"- id={c['id']}: [{c['category']}] {c['issue']} — {c['details']}" for c in candidates
@@ -264,6 +274,7 @@ async def analyze_issue(report: IssueReport):
 
         if supabase:
             record = {
+                'topic': report.topic,
                 'issue': report.issue,
                 'details': report.details,
                 'location': report.location,
@@ -308,6 +319,7 @@ async def get_issues():
         raise HTTPException(status_code=500, detail=str(e))
 
 class IssueUpdate(BaseModel):
+    topic: Optional[str] = None
     issue: Optional[str] = None
     details: Optional[str] = None
     location: Optional[str] = None

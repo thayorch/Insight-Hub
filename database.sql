@@ -1,6 +1,7 @@
 -- Create the issues table
 CREATE TABLE issues (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  topic text,
   issue text NOT NULL,
   details text NOT NULL,
   location text NOT NULL,
@@ -37,3 +38,4 @@ ALTER TABLE issues ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'unreso
 ALTER TABLE issues ADD CONSTRAINT issues_status_check CHECK (status IN ('unresolved', 'in_progress', 'resolved'));
 ALTER TABLE issues ADD COLUMN IF NOT EXISTS report_count integer NOT NULL DEFAULT 1;
 ALTER TABLE issues ADD COLUMN IF NOT EXISTS assignee text;
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS topic text;
