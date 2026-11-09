@@ -307,7 +307,7 @@ ChartJS.register(Title, Tooltip, Legend, ArcElement, BarElement, CategoryScale, 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || 'http://localhost:8000'
 
-const CATEGORIES = ['Safety & Persons', 'Structure & Traffic', 'Common areas', 'Environment']
+const CATEGORIES = ['Safety & Persons', 'Structure & Traffic', 'Common areas', 'Environment','อื่นๆ']
 
 const issues = ref([])
 const chartData = ref(null)
