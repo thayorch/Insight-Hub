@@ -21,7 +21,7 @@
                 class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border bg-white"
               >
                 <option value="" disabled>-- เลือกประเภทหัวข้อ --</option>
-                <option v-for="t in topics" :key="t" :value="t">{{ t }}</option>
+                <option v-for="t in TOPICS" :key="t" :value="t">{{ t }}</option>
               </select>
             </div>
             <div>
@@ -148,16 +148,6 @@ import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || 'http://localhost:8000'
-
-const topics = [
-  'คดีความ-นักศึกษา',
-  'การบริหารการจัดการ',
-  'การเมือง',
-  'วิชาการ/การวิจัย',
-  'คดีความ-บุคลากร',
-  'ทุจริต/ฉ้อโกง',
-  'อื่นๆ'
-]
 
 const form = ref({
   topic: '',

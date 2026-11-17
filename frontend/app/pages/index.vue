@@ -71,7 +71,7 @@
 
         <!-- Category Bar Chart Card -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-          <h2 class="text-base font-semibold text-slate-900 mb-6">จำนวนปัญหาแยกตามหมวดหมู่</h2>
+          <h2 class="text-base font-semibold text-slate-900 mb-6">จำนวนปัญหาแยกตามหัวข้อ</h2>
           <div class="flex-1 min-h-[220px] relative">
             <ClientOnly>
               <Bar v-if="categoryChartData" :data="categoryChartData" :options="barChartOptions" />
@@ -98,8 +98,9 @@
           <h2 class="text-base font-semibold text-slate-900">แผนที่จุดเกิดเหตุ</h2>
           <div class="flex flex-wrap gap-2">
             <select v-model="filterCategory" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2 border bg-white">
-              <option value="">ทุกหมวดหมู่</option>
-              <option v-for="c in CATEGORIES" :key="c" :value="c">{{ c }}</option>
+              <option value="">ทุกหัวข้อ</option>
+              <option v-for="t in TOPICS" :key="t" :value="t">{{ t }}</option>
+              <option :value="UNSPECIFIED_TOPIC">{{ UNSPECIFIED_TOPIC }}</option>
             </select>
             <select v-model="filterStatus" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2 border bg-white">
               <option value="">ทุกสถานะ</option>
@@ -149,7 +150,7 @@
               <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">วันและเวลา</th>
               <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">หัวข้อปัญหา</th>
               <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">สถานที่</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">หมวดหมู่</th>
+              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">หัวข้อ</th>
               <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ความรุนแรง</th>
               <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">สถานะ</th>
               <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ผู้รับผิดชอบ</th>
@@ -171,8 +172,9 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-800">
-                  {{ issue.category }}
+                  {{ topicOf(issue) }}
                 </span>
+                <div class="mt-1 text-xs text-slate-400">{{ issue.category }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="severityClass(issue.risk_level)" class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-md border">
@@ -307,8 +309,6 @@ ChartJS.register(Title, Tooltip, Legend, ArcElement, BarElement, CategoryScale, 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || 'http://localhost:8000'
 
-const CATEGORIES = ['Safety & Persons', 'Structure & Traffic', 'Common areas', 'Environment','อื่นๆ']
-
 const issues = ref([])
 const chartData = ref(null)
 const categoryChartData = ref(null)
@@ -329,7 +329,7 @@ const filterStatus = ref('')
 
 const filteredIssues = computed(() => {
   return issues.value.filter(i => {
-    if (filterCategory.value && i.category !== filterCategory.value) return false
+    if (filterCategory.value && topicOf(i) !== filterCategory.value) return false
     if (filterStatus.value && i.status !== filterStatus.value) return false
     if (searchText.value) {
       const q = searchText.value.toLowerCase()
@@ -662,10 +662,11 @@ function prepareChartData() {
 
 function prepareCategoryChartData() {
   const counts = {}
-  CATEGORIES.forEach(c => { counts[c] = 0 })
+  TOPICS.forEach(t => { counts[t] = 0 })
 
   issues.value.forEach(issue => {
-    counts[issue.category] = (counts[issue.category] || 0) + 1
+    const topic = topicOf(issue)
+    counts[topic] = (counts[topic] || 0) + 1
   })
 
   categoryChartData.value = {
@@ -787,7 +788,7 @@ async function initMap() {
         .bindPopup(`
           <div style="font-family: sans-serif;">
             <strong style="display:block;margin-bottom:4px;color:#0f172a">${issue.issue}</strong>
-            <span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#f1f5f9;font-size:12px;color:#475569;margin-bottom:4px;">${issue.category}</span>
+            <span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#f1f5f9;font-size:12px;color:#475569;margin-bottom:4px;">${topicOf(issue)}</span>
             <div style="font-size:12px;color:#64748b;">Risk Level: <b style="color:${color}">${issue.risk_level}</b></div>
           </div>
         `)
